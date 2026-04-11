@@ -1,0 +1,1566 @@
+</script>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dsreg6hmo/image/upload/v1764787274/BetBoard/Photos/edintuhnzhaggj2uhnig.jpg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllIn Reports</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+if(localStorage.getItem("logado") !== "true"){
+  window.location.href = "login.html";
+}
+</script>
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+
+  const cards = document.querySelectorAll(".card h3");
+const PAGE = "silte";
+  const formatarMoeda = (valor) => {
+    if (valor.includes("R$")) return valor;
+    let numero = valor.replace(/[^\d]/g, "");
+    if (!numero) return valor;
+    return "R$ " + (parseFloat(numero) / 100).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2
+    });
+  };
+
+  // 🔹 Carregar dados
+  fetch(`http://localhost:3001/get?page=${PAGE}`)
+    .then(res => res.json())
+    .then(data => {
+      cards.forEach((el, i) => {
+        if (data[i]) el.innerText = data[i];
+      });
+    });
+
+  cards.forEach((el, index) => {
+
+    el.style.cursor = "pointer";
+
+    el.addEventListener("click", () => {
+
+      if (el.querySelector("input")) return;
+
+      const valorAtual = el.innerText;
+
+      const input = document.createElement("input");
+      input.value = valorAtual;
+
+      // estilo invisível (mantém design)
+      Object.assign(input.style, {
+        background: "transparent",
+        border: "none",
+        color: "#fff",
+        fontSize: "20px",
+        width: "100%",
+        outline: "none"
+      });
+
+      el.innerHTML = "";
+      el.appendChild(input);
+      input.focus();
+
+      // 🔥 efeito visual
+      el.style.opacity = "0.7";
+
+      const salvar = async () => {
+        let novoValor = input.value.trim() || valorAtual;
+
+        // formata dinheiro automático
+        if (valorAtual.includes("R$")) {
+          novoValor = formatarMoeda(novoValor);
+        }
+
+        el.innerText = novoValor;
+        el.style.opacity = "1";
+
+        // indicador salvando
+        const saving = document.createElement("span");
+        saving.innerText = " • salvando...";
+        saving.style.fontSize = "12px";
+        saving.style.color = "#84cc16";
+
+        el.appendChild(saving);
+
+        try {
+await fetch("http://localhost:3001/save", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    page: PAGE,
+    index: index,
+    value: novoValor
+  })
+});
+
+          saving.innerText = " ✔";
+        } catch (e) {
+          saving.innerText = " ✖ erro";
+          console.log(e);
+        }
+
+        setTimeout(() => saving.remove(), 1200);
+      };
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") salvar();
+        if (e.key === "Escape") {
+          el.innerText = valorAtual;
+          el.style.opacity = "1";
+        }
+      });
+
+      input.addEventListener("blur", salvar);
+
+    });
+
+  });
+
+});
+</script>
+
+<script>
+function resetarDados() {
+
+  if (!confirm("Tem certeza que deseja resetar os dados?")) return;
+
+  fetch("http://localhost:3001/reset", {
+    method: "POST"
+  })
+  .then(() => {
+    window.location.href = "site.html";
+  })
+  .catch(err => {
+    console.log(err);
+    alert("Erro ao resetar");
+  });
+
+}
+</script>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="loader"></div>
+  <p>Verificando autenticação...</p>
+</div>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family: Inter, system-ui;
+  background:rgba(20, 28, 46);
+  color:#F6F6F6;
+}
+
+.input {
+  cursor: pointer;
+}
+
+.chip {
+  cursor: pointer;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  border-bottom-width: 1px;
+  height:100vh;
+  background:#172035;
+  position:fixed;
+  padding:14px;
+  border-right:1px solid rgba(255,255,255,0.1);
+}
+
+.logo{
+  height:60px;
+  display:flex;
+  margin-bottom:20px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.logo img{
+  height:40px;
+}
+
+.icon img{
+  width:49px;
+  height:49px;
+}
+
+/* MENU */
+.menu-title{
+  font-size:12px;
+  color:#C0C0C0;
+  font-weight: bold;
+  margin:25px 0 6px;
+}
+
+.menu-item{
+  padding:7px 8px;
+  border-radius:5px;
+  font-size:14px;
+  color:#F6F6F6;
+  margin-bottom:1px;
+  cursor:pointer;
+}
+
+.menu-item.active{
+  background:#2a3448;
+  color:#fff;
+}
+
+.menu-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.menu-item svg{
+  width:16px;
+  height:16px;
+  stroke:#ffffff;
+}
+
+/* MAIN */
+.main{
+  margin-left:260px;
+
+}
+
+/* LOADING SCREEN */
+#loadingScreen{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#0f1b2d;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+.loader{
+  width:40px;
+  height:40px;
+  border:4px solid rgba(124,255,90,0.2);
+  border-top:4px solid #7cff5a;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin-bottom:15px;
+}
+
+@keyframes spin{
+  100%{ transform: rotate(360deg); }
+}
+
+#loadingScreen p{
+  font-size:14px;
+  color:#fff;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.separator{
+  width:1px;
+  height:20px;
+  background:rgba(255,255,255,0.1);
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.icon-btn{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#9fb3d9;
+  
+}
+
+.avatar{
+  width:39px;
+  height:39px;
+  padding:10px;
+  margin:8px;
+  border-radius:50%;
+  font-weight: bold;
+  background:rgba(96, 96, 96,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+}
+
+/* INPUTS */
+.top-inputs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.input{
+  height:40px;
+  border-radius:8px;
+  margin:5px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#111c2e;
+}
+
+.input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ícone padrão */
+.input svg {
+  width: 16px;
+  height: 16px;
+  stroke: #7cff5a;
+}
+
+/* Primeiro input (calendário) */
+.input.calendar svg {
+  stroke: #7cff5a;
+}
+
+.input.calendar{
+  cursor:pointer;
+  transition:0.2s;
+  border-radius:8px;
+}
+
+/* 🔥 HOVER IGUAL DA PRINT */
+.input.calendar:hover{
+  background:rgba(148,163,184,0.25); /* cinza claro */
+}
+
+/* 🔥 CLIQUE (feedback) */
+.input.calendar:active{
+  transform:scale(0.97);
+}
+
+/* 🔥 HOVER IGUAL DA PRINT */
+.input.home:hover{
+  background:rgba(148,163,184,0.25); /* cinza claro */
+}
+
+/* 🔥 CLIQUE (feedback) */
+.input.home:active{
+  transform:scale(0.97);
+}
+
+/* Segundo input (casa) */
+.input.home svg {
+  stroke: #7cff5a;
+}
+
+.menu-item {
+  padding: 7px 8px;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #F6F6F6;
+  margin-bottom: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s; /* 🔥 importante */
+}
+
+/* 🔥 HOVER IGUAL FILTROS */
+.menu-item:hover {
+  background: rgba(148,163,184,0.25);
+}
+
+/* 🔥 CLICK (igual filtro) */
+.menu-item:active {
+  transform: scale(0.97);
+}
+
+/* FILTER BAR */
+.filters{
+  background: rgba(69, 74, 84, 0.35);
+  padding:17px;
+  border-radius:3px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:2px;
+  align-items:center;
+}
+
+.filters span{
+  font-size:14px;
+  color:#F6F6F6;
+}
+
+.chip{
+  padding:2px 10px;
+  border-radius:6px;
+  font-size:12px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+/* CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+    padding:20px 20px;
+}
+
+.card{
+  background:#0f1b2d;
+  border:2px solid rgba(128,128,128,0.4);
+  border-radius:12px;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.icon{
+  width:52px;
+  height:52px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.cards-wrapper{
+  position:relative;
+}
+
+/* OVERLAY */
+#cardsLoading{
+  position:absolute;
+  inset:0;
+  background:rgba(15,27,45,0.85);
+  backdrop-filter: blur(4px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  z-index:5;
+}
+
+/* Spinner fino igual da print */
+.loader{
+  width:35px;
+  height:35px;
+  border:3px solid rgba(255,255,255,0.1);
+  border-top:3px solid #84cc16; /* verde */
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+
+#cardsLoading p{
+  margin-top:8px;
+  font-size:13px;
+  color:#cbd5e1;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* OVERLAY */
+#cardsLoading2{
+  position:absolute;
+  inset:0;
+  background:rgba(15,27,45,0.85);
+  backdrop-filter: blur(4px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  z-index:5;
+}
+
+/* Spinner fino igual da print */
+.loader2{
+  width:50px;
+  height:50px;
+  border-top:3px solid #84cc16; /* verde */
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+
+#cardsLoading2 p{
+  margin-top:8px;
+  font-size:13px;
+  color:#cbd5e1;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+#calendarModal input[type="date"]{
+  width: 100%;
+  background: #0f1b2d;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+#calendarModal {
+  z-index: 9999;
+}
+
+.icon svg{
+  width:26px;
+  height:26px;
+  stroke:#7cff5a;
+  fill:none;
+  stroke-width:2;
+}
+
+.icon-btn svg{
+  width:16px;
+  height:16px;
+  stroke:#FFFFFF;
+}
+
+.card small{
+  font-size:12px;
+  color:#E9E9E9;
+}
+
+.card h3{
+  margin-top:2px;
+  font-size:20px;
+}
+
+/* HEADER COM X */
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:4px;
+}
+
+.modal-header h3{
+  font-size:18px;
+  font-weight:600;
+}
+
+.close{
+  cursor:pointer;
+  font-size:18px;
+  opacity:0.7;
+}
+
+/* SUBTEXTO */
+.modal-subtitle{
+  font-size:13px;
+  color:#94a3b8;
+  margin-bottom:18px;
+}
+
+/* LABEL */
+.modal-content label{
+  font-size:13px;
+  color:#cbd5e1;
+  margin-bottom:6px;
+  margin-top:14px;
+}
+
+/* INPUT */
+.date-input{
+  width:100%;
+  height:44px;
+  background:#0f1b2d;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;
+  padding:0 44px 0 14px;
+  color:#fff;
+  font-size:14px;
+  outline:none;
+  transition:0.2s;
+}
+
+/* FOCO VERDE IGUAL PRINT */
+.date-input:focus{
+  border:1px solid #a3e635;
+  box-shadow:0 0 0 1px #a3e635;
+}
+
+/* ÍCONE DIREITA */
+.icon-box{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  background:#0f1b2d;
+}
+
+/* MODAL MAIS IGUAL */
+.modal-content{
+  padding:24px;
+  border-radius:16px;
+  background:linear-gradient(180deg,#0f1b2d,#111c2e);
+}
+
+#calendarModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+.modal-content{
+  background: linear-gradient(180deg, #0f1b2d, #0f1b2d);
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:420px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+.modal-content h3{
+  margin-bottom:12px;
+  font-size:16px;
+}
+
+.modal-content label{
+  font-size:13px;
+  color:#cbd5e1;
+  display:block;
+  margin-top:10px;
+  margin-bottom:4px;
+}
+
+.date-input{
+  width:100%;
+  height:40px;
+  background:#0f1b2d;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;
+  padding:0 12px;
+  color:#fff;
+  outline:none;
+}
+
+.date-input::placeholder{
+  color:#94a3b8;
+}
+
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:20px;
+}
+
+/* BOTÃO CANCELAR (CINZA ESCURO) */
+.btn-cancel{
+  background:#0f1b2d;
+  color:#cbd5e1;
+  border:1px solid rgba(255,255,255,0.08);
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.btn-cancel:hover{
+  background:#323f5a;
+}
+
+/* BOTÃO APPLY (VERDE) */
+.btn-apply{
+  background:#84cc16;
+  color:#0f172a;
+  border:none;
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.btn-apply:hover{
+  background:#65a30d;
+}
+
+.date-input{
+  cursor:pointer;
+}
+
+
+
+
+
+
+
+
+/* FUNDO ESCURO */
+.custom-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+/* CAIXA */
+.custom-modal .modal-content{
+  width:100%;
+  max-width:420px;
+  background:linear-gradient(180deg,#0f1b2d,#111c2e);
+  border-radius:16px;
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+
+/* HEADER */
+.custom-modal .modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.custom-modal h3{
+  font-size:18px;
+  font-weight:600;
+}
+
+.custom-modal .close{
+  cursor:pointer;
+  font-size:18px;
+  opacity:0.7;
+}
+
+/* SUB */
+.custom-modal .modal-subtitle{
+  font-size:13px;
+  color:#94a3b8;
+  margin:10px 0 18px;
+}
+
+/* LABEL */
+.custom-modal label{
+  font-size:13px;
+  color:#cbd5e1;
+  margin-bottom:6px;
+  display:block;
+  margin-top:14px;
+}
+
+.input-group{
+  position:relative;
+}
+
+.date-input{
+  width:100%;
+  height:48px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#0f1b2d;
+  color:#fff;
+  padding:0 50px 0 14px; /* espaço pro ícone */
+  font-size:14px;
+}
+
+/* CAIXINHA DO ÍCONE (SEPARADA) */
+.icon-box{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#111c2e;
+  color:#94a3b8;
+}
+
+/* INPUT */
+.custom-modal .date-input{
+  width:100%;
+  height:44px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#0f1b2d;
+  color:#fff;
+  padding:0 44px 0 14px;
+  font-size:14px;
+  outline:none;
+}
+
+/* FOCO */
+.custom-modal .date-input:focus{
+  border:1px solid #a3e635;
+  box-shadow:0 0 0 1px #a3e635;
+}
+
+/* ÍCONE */
+.custom-modal .icon-box{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1b2d;
+}
+
+/* BOTÕES */
+.custom-modal .actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:20px;
+}
+
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:20px;
+}
+
+/* BOTÃO CANCELAR (CINZA ESCURO) */
+.close-btn{
+  background:#2a3448;
+  color:#cbd5e1;
+  border:1px solid rgba(255,255,255,0.08);
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.close-btn:hover{
+  background:#323f5a;
+}
+
+/* BOTÃO APPLY (VERDE) */
+.close-apply{
+  background:#84cc16;
+  color:#0f172a;
+  border:none;
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.close-apply:hover{
+  background:#65a30d;
+}
+
+/* ===== FLATPICKR CUSTOM IGUAL PRINT ===== */
+
+.flatpickr-calendar {
+  background: #fff;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  font-family: Inter, system-ui;
+}
+
+/* HEADER (mês/ano) */
+.flatpickr-months {
+  background: transparent;
+}
+
+.flatpickr-current-month {
+  color: #fff;
+  font-weight: 500;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  color: #94a3b8;
+  fill: #94a3b8;
+}
+
+/* DIAS DA SEMANA */
+.flatpickr-weekdays {
+  background: transparent !important;
+  border: none !important;
+}
+
+.flatpickr-weekdaycontainer {
+  background: transparent !important;
+}
+
+.flatpickr-weekday {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  font-size: 12px;
+}
+
+/* DIAS */
+.flatpickr-day {
+  color: #e2e8f0;
+  border-radius: 8px;
+}
+
+/* HOVER */
+.flatpickr-day:hover {
+  background: rgba(148,163,184,0.2);
+}
+
+/* DIA SELECIONADO */
+.flatpickr-day.selected {
+  background: #a3e635;
+  color: #0f172a;
+  border: none;
+}
+
+/* DIA HOJE */
+.flatpickr-day.today {
+  border: 1px solid #a3e635;
+}
+
+/* DIAS FORA DO MÊS */
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: #475569;
+}
+
+/* TAMANHO */
+.flatpickr-calendar.inline,
+.flatpickr-calendar.open {
+  width: 280px;
+  padding: 10px;
+}
+
+/* HEADER DO CALENDÁRIO IGUAL PRINT */
+.flatpickr-months {
+  background: #0f1b2d !important;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 8px 0;
+}
+
+/* remove fundo cinza estranho */
+.flatpickr-month {
+  background: transparent !important;
+}
+
+/* texto mês */
+.flatpickr-current-month {
+  color: #e2e8f0 !important;
+  font-size: 14px;
+}
+
+/* setas */
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  fill: #94a3b8 !important;
+  color: #94a3b8 !important;
+}
+
+.icon-box{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  border-left:1px solid rgba(255,255,255,0.08); /* 🔥 divisão real */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#111c2e;
+}
+
+.date-input{
+  padding-right:50px; /* espaço real pro ícone */
+}
+
+/* FUNDO TOTAL DO CALENDÁRIO */
+.flatpickr-calendar {
+  background: #0f1b2d !important;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+}
+
+/* container interno */
+.flatpickr-innerContainer {
+  background: #0f1b2d !important;
+}
+
+/* dias */
+.flatpickr-days {
+  background: #0f1b2d !important;
+}
+
+/* semana (nomes dos dias) */
+.flatpickr-weekdays {
+  background: #0f1b2d;
+}
+
+.flatpickr-weekday {
+  color: #fff !important;
+  background: #0f1b2d;
+}
+
+/* cada dia */
+.flatpickr-day {
+  color: #e2e8f0 !important;
+  border-radius: 8px;
+}
+
+/* hover */
+.flatpickr-day:hover {
+  background: #1e293b !important;
+}
+
+/* selecionado */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: #84cc16 !important;
+  color: #000 !important;
+}
+
+/* remove qualquer fundo claro perdido */
+.flatpickr-months,
+.flatpickr-days,
+.flatpickr-innerContainer,
+.flatpickr-rContainer {
+  background: #0f1b2d !important;
+}
+
+.icon-btn {
+  width:30px;
+  height:30px;
+  border-radius:20%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#9fb3d9;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* 🔥 HOVER */
+.icon-btn:hover {
+  background: rgba(148,163,184,0.25);
+}
+
+/* 🔥 CLICK */
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px){
+
+  /* 🔥 remove sidebar fixa */
+  .sidebar{
+    position:relative;
+    width:100%;
+    height:auto;
+  }
+
+  .main{
+    margin-left:0;
+  }
+
+  /* 🔥 cards em 1 coluna */
+  .cards{
+    grid-template-columns:1fr;
+    padding:10px;
+  }
+
+  /* 🔥 inputs empilhados */
+  .top-inputs{
+    grid-template-columns:1fr;
+  }
+
+  /* 🔥 header ajustado */
+  .header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+
+
+}
+
+@media (max-width: 768px){
+
+  .sidebar{
+    display:none;
+  }
+
+  .main{
+    margin-left:0;
+    padding:10px;
+  }
+
+}
+
+@media (max-width: 768px){
+
+  .header{
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+}
+
+@media (max-width: 768px){
+
+  .top-inputs{
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .input{
+    height:45px;
+    border-radius:10px;
+  }
+
+}
+
+@media (max-width: 768px){
+
+  .cards{
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:10px 0;
+  }
+
+  .card{
+    width:100%;
+    border-radius:12px;
+    padding:12px;
+  }
+
+}
+
+body{
+  overflow-x:hidden;
+}
+
+@media (max-width: 768px){
+
+
+ 
+
+  /* remove barra feia */
+  .filters::-webkit-scrollbar{
+    display:none;
+  }
+
+  .filters span{
+    white-space:nowrap;
+    font-size:13px;
+  }
+
+  .chip{
+    white-space:nowrap;
+    flex-shrink:0; /* 🔥 não encolhe */
+    font-size:11px;
+    padding:5px 10px;
+  }
+
+}
+
+@media (max-width: 768px){
+
+
+
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    flex-wrap:nowrap;
+
+    max-width:100%;
+  }
+
+  .filters span{
+    flex-shrink:0; /* 🔥 impede quebrar */
+  }
+
+  .chip{
+    flex-shrink:0;
+    white-space:nowrap;
+  }
+
+}
+
+.filters{
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <img src="https://res.cloudinary.com/dsreg6hmo/image/upload/v1764787274/BetBoard/Photos/edintuhnzhaggj2uhnig.jpg">
+  </div>
+
+  <div class="menu-title">Menu Principal</div>
+<div class="menu-item">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+    <path d="m9 12 2 2 4-4"></path>
+  </svg>
+  gíria de Divulgação
+</div>
+
+  <div class="menu-title">Relatórios</div>
+<div class="menu-item active">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+    <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+    <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+    <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+  </svg>
+  Overview
+</div>
+<div class="menu-item">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+    <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+    <path d="M10 9H8"></path>
+    <path d="M16 13H8"></path>
+    <path d="M16 17H8"></path>
+  </svg>
+  Detalhes por Casa
+</div>
+<div class="menu-item">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 7h6v6"></path>
+    <path d="m22 7-8.5 8.5-5-5L2 17"></path>
+  </svg>
+  Gráficos
+</div>
+</div>
+
+<div class="main">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="icon-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+    <path d="M9 3v18"></path>
+  </svg>
+</div>
+      <div class="separator"></div>
+    </div>
+
+    <div class="header-right">
+<div class="icon-btn">
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="24" height="24" 
+       viewBox="0 0 24 24" 
+       fill="none" 
+       stroke="currentColor" 
+       stroke-width="2" 
+       stroke-linecap="round" 
+       stroke-linejoin="round">
+
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2"></path>
+    <path d="M12 20v2"></path>
+    <path d="m4.93 4.93 1.41 1.41"></path>
+    <path d="m17.66 17.66 1.41 1.41"></path>
+    <path d="M2 12h2"></path>
+    <path d="M20 12h2"></path>
+    <path d="m6.34 17.66-1.41 1.41"></path>
+    <path d="m19.07 4.93-1.41 1.41"></path>
+
+  </svg>
+</div>
+      <div class="avatar">MO</div>
+    </div>
+  </div>
+
+<script>
+function abrirModal(){
+  document.getElementById("calendarModal").style.display = "flex";
+}
+
+function fecharModal(){
+  document.getElementById("calendarModal").style.display = "none";
+}
+
+function aplicarFiltro(){
+  const inicio = document.getElementById("dataInicio").value;
+  const fim = document.getElementById("dataFim").value;
+
+  // REDIRECIONA PARA OUTRA PÁGINA
+  window.location.href = `site.html`;
+}
+</script>
+
+<div class="top-inputs">
+  <!-- INPUT CALENDÁRIO -->
+  <div class="input calendar" onclick="abrirModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+  </div>
+
+  <!-- INPUT CASA -->
+<div class="input home" onclick="resetarDados()">
+  <svg xmlns="http://www.w3.org/2000/svg"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+       
+    <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path>
+    <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    
+  </svg>
+</div>
+</div>
+
+<!-- MODAL -->
+<div id="calendarModal" class="custom-modal">
+  <div class="modal-content">
+
+    <!-- HEADER -->
+    <div class="modal-header">
+      <h3>Filtrar por Período</h3>
+      <span class="close" onclick="fecharModal()">✕</span>
+    </div>
+
+    <!-- SUBTITULO -->
+    <p class="modal-subtitle">
+      Selecione o período de datas para filtrar os relatórios.
+    </p>
+
+    <!-- DATA INICIO -->
+    <label>Data de Início</label>
+    <div class="input-group">
+      <input type="text" id="dataInicio" class="date-input" value="01/07/2026">
+<div class="icon-box">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+       viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 2v4"></path>
+    <path d="M16 2v4"></path>
+    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+    <path d="M3 10h18"></path>
+  </svg>
+</div>
+    </div>
+
+<!-- DATA FIM -->
+<label>Data de Término</label>
+<div class="input-group">
+  <input type="text" id="dataFim" class="date-input" value="30/08/2026">
+
+  <div class="icon-box">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+      viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 2v4"></path>
+      <path d="M16 2v4"></path>
+      <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+      <path d="M3 10h18"></path>
+    </svg>
+  </div>
+</div>
+
+<!-- 🔥 BOTÕES FORA DO INPUT -->
+<div class="actions">
+  <button class="close-btn" onclick="fecharModal()">Cancelar</button>
+  <button class="close-apply" onclick="aplicarFiltro()">Aplicar Filtros</button>
+</div>
+  </div>
+</div>
+
+
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <span>Filtros ativos:</span>
+    <div class="chip">Limpar Tudo ✕</div>
+    <div class="chip">Data início: 01/04/2026 ✕</div>
+    <div class="chip">Data fim: 30/04/2026 ✕</div>
+    <div class="chip">Todas as casas ✕</div>
+  </div>
+  
+<script>
+window.addEventListener("load", () => {
+
+  const screenLoader = document.getElementById("loadingScreen");
+  const cardsLoader = document.getElementById("cardsLoading2");
+
+  // 1. Tela de autenticação
+  setTimeout(() => {
+    screenLoader.style.display = "none";
+
+    // 2. Loading nos cards
+    cardsLoader.style.display = "flex";
+
+    // 3. Remove loading dos cards
+    setTimeout(() => {
+      cardsLoader.style.display = "none";
+    }, 250);
+
+  }, 500);
+
+});
+</script>
+
+  <!-- CARDS -->
+<div class="cards-wrapper">
+
+  <!-- LOADING OVERLAY -->
+  <div id="cardsLoading2">
+    <div class="loader2"></div>
+    <p>Carregando dados...</p>
+  </div>
+
+  <div class="cards">
+
+<div class="card">
+  <div class="icon"><img src="Cadastro 2-dImE--7A.svg"></div>
+  <div><small>Registro</small><h3>0</h3></div>
+</div>
+
+<div class="card">
+  <div class="icon"><img src="FTD-BkwOULkh.svg"></div>
+  <div><small>FTD</small><h3>0</h3></div>
+</div>
+
+<div class="card">
+  <div class="icon"><img src="FTD-BkwOULkh.svg"></div>
+  <div><small>QFTD</small><h3>0</h3></div>
+</div>
+
+<div class="card">
+  <div class="icon"><img src="deposito-BqL6OVL2.svg"></div>
+  <div><small>Depósito</small><h3>R$ 0,00</h3></div>
+</div>
+
+<div class="card">
+  <div class="icon"><img src="Rev-Cd_d35Vr.svg"></div>
+  <div><small>REV</small><h3>R$ 0,00</h3></div>
+</div>
+
+<div class="card">
+  <div class="icon"><img src="valor-D6_MFilE.svg"></div>
+  <div><small>Contador Público Certificado (CPA)</small><h3>R$ 0,00</h3></div>
+</div>
+
+<div class="card">
+  <div class="icon"><img src="Liquido Total2-BCbkIALr.svg"></div>
+  <div><small>REV + CPA</small><h3>R$ 0,00</h3></div>
+</div>
+  </div>
+</div>
+  </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+<script>
+flatpickr.localize(flatpickr.l10ns.pt);
+
+flatpickr("#dataInicio", {
+  locale: "pt",
+  dateFormat: "d/m/Y",
+  disableMobile: true,
+  monthSelectorType: "static"
+});
+
+flatpickr("#dataFim", {
+  locale: "pt",
+  dateFormat: "d/m/Y",
+  disableMobile: true,
+  monthSelectorType: "static"
+});
+</script>
+
+</body>
+</html>
